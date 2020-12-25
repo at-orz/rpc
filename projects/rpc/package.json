@@ -1,0 +1,36 @@
+{
+  "name": "@orz/rpc",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "main": "lib",
+  "types": "lib",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "invoke pipeline build",
+    "clean": "invoke pipeline clean",
+    "cleanbuild": "invoke pipeline cleanbuild",
+    "cleanwatch": "invoke pipeline cleanwatch",
+    "dev": "invoke pipeline dev",
+    "dist": "invoke pipeline dist",
+    "fix": "invoke pipeline fix",
+    "lint": "invoke pipeline lint",
+    "watch": "invoke pipeline watch"
+  },
+  "dependencies": {
+    "loi": "^0.10.0",
+    "msgpack-lite": "^0.1.26"
+  },
+  "devDependencies": {
+    "@types/msgpack-lite": "^0.1.7"
+  },
+  "invoke/pipeline": {
+    "typescript": {
+      "build": "tsc --build --incremental tsconfig.json",
+      "clean": "tsc --build --incremental --clean tsconfig.json",
+      "lint": "tslint --project tsconfig.json --config tslint.json",
+      "watch": "tsc --build --incremental --watch --preserveWatchOutput tsconfig.json"
+    }
+  }
+}
