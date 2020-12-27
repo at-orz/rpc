@@ -7,38 +7,38 @@ type Mutable<T> = { -readonly [KeyType in keyof T]: T[KeyType]; }
 function mutable<T>(obj: T): Mutable<T> { return obj as any }
 
 export class RpcConnection extends RpcWire {
-  readonly socket!: WebSocket
-  readonly request!: IncomingMessage
+  readonly rpcSocket!: WebSocket
+  readonly rpcRequest!: IncomingMessage
 
-  _handle(request: this['request'], socket: this['socket']) {
-    assert(!this.request)
-    assert(!this.socket)
+  rpcHandle(request: this['rpcRequest'], socket: this['rpcSocket']) {
+    assert(!this.rpcRequest)
+    assert(!this.rpcSocket)
 
     const mutableThis = mutable(this)
-    mutableThis.socket = socket
-    mutableThis.request = request
+    mutableThis.rpcSocket = socket
+    mutableThis.rpcRequest = request
 
-    this._listenToMessage()
+    this.rpcListenToMessage()
   }
 
-  private _listenToMessage() {
-    this.socket.on('message', (message) => {
-      this.runInContext(() => {
+  private rpcListenToMessage() {
+    this.rpcSocket.on('message', (message) => {
+      this.rpcRunInContext(() => {
         if (typeof message !== 'string') {
           assert(Buffer.isBuffer(message));
         }
-        void this._handleMessage(message);
+        void this.rpcHandleMessage(message);
       })
     })
   }
 
-  protected _close(message?: string, code?: number): void {
-    this.socket.close(code, message);
+  protected rpcSocketClose(message?: string, code?: number): void {
+    this.rpcSocket.close(code, message);
   }
 
-  protected _send(data: Uint8Array): Promise<void> {
+  protected rpcSocketSend(data: Uint8Array): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      this.socket.send(data, (err) => {
+      this.rpcSocket.send(data, (err) => {
         if (err) {
           reject()
         } else {

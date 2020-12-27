@@ -57,8 +57,8 @@ function setPath(target: any, inputPath: string | string[], value: any) {
 
 export function connectWire<P extends RpcProtocol, T extends new (...args: any[]) => RpcWire>(protocol: P, wire: T) {
   const base = class ConnectedWireBase extends wire {
-    _close!: any
-    _send!: any
+    rpcSocketClose!: any
+    rpcSocketSend!: any
 
     constructor(...args: any[]) {
       super(...args);
@@ -68,7 +68,7 @@ export function connectWire<P extends RpcProtocol, T extends new (...args: any[]
       }
     }
 
-    async _runMethod(name: string, args: any[]): Promise<any> {
+    async rpcRunMethod(name: string, args: any[]): Promise<any> {
       if (!Object.prototype.hasOwnProperty.call(protocol.flattenClient, name)) throw new Error("Method Not Found");
       const method = protocol.flattenClient[name];
 
@@ -101,7 +101,7 @@ export function connectWire<P extends RpcProtocol, T extends new (...args: any[]
         Loi.validateOrThrow(encoded[i], method.arguments[i])
       }
 
-      return Loi.validateOrThrow(await this._call(path, encoded), method.return);
+      return Loi.validateOrThrow(await this.rpcCall(path, encoded), method.return);
     }
     setPath(klass.prototype, path, fn)
     serverMethods.push([path, fn]);
