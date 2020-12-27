@@ -63,15 +63,19 @@ export abstract class RpcWire {
       }
       await this.rpcSocketSend(Bag.encode(response));
     } catch (e) {
-      this.logger.error(e)
+      this.logger.error(e, 'Error happened while running RPC method {MethodName} with {@Arguments}', decoded.fn, decoded.args)
       const response: RpcErrorResponse = {
         seq: decoded.seq,
-        error: {
-          code: '// TODO',
-          message: '// TODO'
-        },
+        error: this.rpcFormatError(e),
       }
       await this.rpcSocketSend(Bag.encode(response));
+    }
+  }
+
+  protected rpcFormatError(_error: any): IRpcError {
+    return {
+      code: "internal",
+      message: "Internal Error"
     }
   }
 
