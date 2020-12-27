@@ -59,6 +59,7 @@ export abstract class RpcWire {
       }
       await this._send(Bag.encode(response));
     } catch (e) {
+      this.logger.error(e)
       const response: RpcErrorResponse = {
         seq: decoded.seq,
         error: {
