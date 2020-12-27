@@ -24,6 +24,10 @@ export function getFlattenRpcMethods(methods: RpcMethods, prefix: string = "") {
   const result: Record<string, AnyRpcMethod> = Object.create(null);
   for (const [key, value] of Object.entries(methods)) {
     const fullKey = `${prefix}${key}`
+    if (fullKey.startsWith("rpc") || fullKey.startsWith("on.") || fullKey == "on" || !key.match(/^[a-z][a-zA-Z0-9]*$/)) {
+      throw new Error(`Invalid RPC method name: ${fullKey}`)
+    }
+
     if (isRpcMethod(value)) {
       result[`${fullKey}`] = value;
     } else {
