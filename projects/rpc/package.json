@@ -21,7 +21,8 @@
   "dependencies": {
     "@orz/logger-stub": "^1.0.0",
     "loi": "^0.10.0",
-    "msgpack-lite": "^0.1.26"
+    "msgpack-lite": "^0.1.26",
+    "navybird": "^0.3.0"
   },
   "devDependencies": {
     "@types/msgpack-lite": "^0.1.7"
