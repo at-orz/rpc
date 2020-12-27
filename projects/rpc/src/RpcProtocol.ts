@@ -1,26 +1,54 @@
 import { Any } from 'loi';
 
-export type RpcMethod<Name extends string, Arguments extends Any[], Return extends Any> = { name: Name, arguments: Arguments, return: Return }
-export type AnyRpcMethod = RpcMethod<any, any, any>
+export const rpcMethodBrand = Symbol.for("@orz/rpc/rpcMethodBrand")
+
+export type RpcMethod<Arguments extends Any[], Return extends Any> = { [rpcMethodBrand]: true, arguments: Arguments, return: Return }
+export type AnyRpcMethod = RpcMethod<any, any>
 
 export function rpcMethod<
-  Name extends string,
   Arguments extends Any[],
   Return extends Any
->(name: Name, returnType: Return, ...args: Arguments): RpcMethod<Name, Arguments, Return> {
-  return { name, return: returnType, arguments: args }
+>(returnType: Return, ...args: Arguments): RpcMethod<Arguments, Return> {
+  return { [rpcMethodBrand]: true, return: returnType, arguments: args }
 }
 
-type RpcMethodDict<T extends readonly AnyRpcMethod[]> = {
-  [K in Extract<keyof T, number> as T[K]['name']]: T[K]
+export type RpcMethods = {
+  [K: string]: AnyRpcMethod | RpcMethods
+}
+
+export function isRpcMethod(t: any): t is AnyRpcMethod {
+  return t && rpcMethodBrand in t && t[rpcMethodBrand] === true;
+}
+
+export function getFlattenRpcMethods(methods: RpcMethods, prefix: string = "") {
+  const result: Record<string, AnyRpcMethod> = Object.create(null);
+  for (const [key, value] of Object.entries(methods)) {
+    const fullKey = `${prefix}${key}`
+    if (isRpcMethod(value)) {
+      result[`${fullKey}`] = value;
+    } else {
+      Object.assign(result, getFlattenRpcMethods(value, `${fullKey}.`))
+    }
+  }
+  return result;
+}
+
+export function rpcProtocol<T extends RpcProtocolInput>(i: T): T & RpcProtocolMeta {
+  return {
+    ...i,
+    flattenServer: getFlattenRpcMethods(i.server),
+    flattenClient: getFlattenRpcMethods(i.client),
+  }
 }
 
 export type RpcProtocolInput = {
-  server: readonly AnyRpcMethod[],
-  client: readonly AnyRpcMethod[],
+  server: RpcMethods,
+  client: RpcMethods,
 }
 
-export type RpcProtocol<T extends RpcProtocolInput> = {
-  server: RpcMethodDict<T['server']>,
-  client: RpcMethodDict<T['client']>
+export type RpcProtocolMeta = {
+  flattenServer: Record<string, AnyRpcMethod>,
+  flattenClient: Record<string, AnyRpcMethod>,
 }
+
+export type RpcProtocol = RpcProtocolInput & RpcProtocolMeta

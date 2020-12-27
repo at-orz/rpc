@@ -49,9 +49,13 @@ export abstract class RpcWire {
     }
   }
 
+  async _runMethod(_name: string, _args: any[]): Promise<any> {
+    throw new Error('All Methods Not Implemented');
+  }
+
   private async _handleRequest(decoded: RpcRequest<any, any[]>) {
     try {
-      const result = await (this as any)[decoded.fn].apply(this, decoded.args);
+      const result = await this._runMethod(decoded.fn, decoded.args);
       const response: RpcSuccessResponse<any> = {
         seq: decoded.seq,
         result,
