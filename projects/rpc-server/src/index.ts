@@ -23,10 +23,12 @@ export class RpcConnection extends RpcWire {
 
   private _listenToMessage() {
     this.socket.on('message', (message) => {
-      if (typeof message !== 'string') {
-        assert(Buffer.isBuffer(message));
-      }
-      void this._handleMessage(message);
+      this.runInContext(() => {
+        if (typeof message !== 'string') {
+          assert(Buffer.isBuffer(message));
+        }
+        void this._handleMessage(message);
+      })
     })
   }
 

@@ -1,7 +1,14 @@
+import { loggerStub } from '@orz/logger-stub';
 import { defer as createDefer, NavybirdDefer } from 'navybird';
 import { Bag } from './Bag';
 
 export abstract class RpcWire {
+  public logger = loggerStub
+
+  public runInContext<T>(task: () => T) {
+    return task()
+  }
+
   private _seq: number = 0
 
   // TODO: cleanup callbacks
@@ -16,7 +23,7 @@ export abstract class RpcWire {
     try {
       decoded = Bag.decode(message)
     } catch (e) {
-      console.error('bag decode error', e)
+      this.logger.error(e, 'Failed to decode message')
       return this._panic("Cannot decode the message");
     }
 
@@ -24,7 +31,7 @@ export abstract class RpcWire {
       await this._handleRequest(decoded)
     } else if (this._isRpcResponse(decoded)) {
       if (!this._defers.has(decoded.seq)) {
-        console.warn(`got unwanted response, seq: ${decoded.seq}`)
+        this.logger.warn("Got unwanted response, seq: {Seq}", decoded.seq)
         return
       }
 
@@ -37,7 +44,7 @@ export abstract class RpcWire {
         defer.reject(new RpcError(decoded.error))
       }
     } else {
-      console.error('got neither request nor response', decoded)
+      this.logger.error('Got neither request nor response {@Message}', decoded)
       return this._panic('Invalid message received')
     }
   }
@@ -68,7 +75,7 @@ export abstract class RpcWire {
    */
   protected _panic(message: string, code: number = 4033): void {
     this._panic = () => { };
-    console.error(message);
+    this.logger.error("Connection closed due to {Reason}", message);
     this._close(message, code);
   }
 

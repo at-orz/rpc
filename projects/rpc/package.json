@@ -19,6 +19,7 @@
     "watch": "invoke pipeline watch"
   },
   "dependencies": {
+    "@orz/logger-stub": "^1.0.0",
     "loi": "^0.10.0",
     "msgpack-lite": "^0.1.26"
   },
