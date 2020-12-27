@@ -104,7 +104,7 @@ export abstract class RpcWire {
   }
 
   public _isRpcResponse(obj: any): obj is RpcResponse<any> {
-    return 'result' in obj
+    return 'result' in obj || 'error' in obj
   }
 }
 
