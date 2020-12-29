@@ -9,19 +9,25 @@ export class RpcClient extends RpcWire {
   rpcStart(target: string) {
     if (this.rpcSocket) throw new Error("Assert failed")
 
+    const ws = new WebSocket(target);
+    ws.binaryType = "arraybuffer";
+
     const mutableThis = mutable(this)
-    mutableThis.rpcSocket = new WebSocket(target);
+    mutableThis.rpcSocket = ws;
 
     return this.rpcListenToMessage()
   }
 
   private async rpcListenToMessage() {
     const promise = new Promise<void>((resolve, reject) => {
-      this.rpcSocket.onerror = (e) => {
-        const err = new Error(JSON.stringify(e)) as any
+      this.rpcSocket.onclose = (e) => {
+        this.rpcSocket.onclose = null;
+        const err = new Error(`Connection failed to open ${e.code}${e.reason ? `: ${e.reason}` : ""}`) as any
         err.event = e;
+        err.reason = e.reason;
+        err.code = e.code;
         reject(err);
-        this.rpcSocket.onerror = null;
+        this.logger.error("Connection failed to open {Code}: {Reason}", e.code, e.reason);
       }
 
       this.rpcSocket.onopen = () => {
@@ -31,12 +37,14 @@ export class RpcClient extends RpcWire {
 
     this.rpcSocket.onmessage = (e) => {
       void this.rpcRunInContext(async () => {
-        if (e.data instanceof Blob) {
+        if (e.data instanceof ArrayBuffer) {
+          await this.rpcHandleMessage(new Uint8Array(e.data))
+        } else if (e.data instanceof Blob) {
           const buf = await e.data.arrayBuffer()
           await this.rpcHandleMessage(new Uint8Array(buf))
         } else {
-          console.error(e.data);
-          throw new Error("Invalid message type")
+          this.logger.error('Invalid message type {Message}', e.data);
+          this.rpcSocket.close(4033, "Invalid message type received");
         }
       })
     }
@@ -44,7 +52,9 @@ export class RpcClient extends RpcWire {
     try {
       await promise
     } finally {
-      this.rpcSocket.onerror = null;
+      this.rpcSocket.onclose = (e) => {
+        this.logger.error("Connection closed {Code}: {Reason}", e.code, e.reason);
+      }
     }
   }
 
