@@ -1,9 +1,13 @@
 # rpc
 
+Yet another RPC scaffolding
+
 ## Example
 
+[Edit this example in StackBlitz](https://stackblitz.com/edit/orz-rpc)
+
 ```typescript
-import { RpcWire, connectWire } from '@orz/rpc'
+import { RpcWire, connectWire, reverseProtocol, rpcProtocol, rpcMethod } from '@orz/rpc'
 
 class WindowMessageRpc extends RpcWire {
   private target!: MessagePort
@@ -59,10 +63,12 @@ class DemoServer extends connectWire(reverseProtocol(demoProtocol), WindowMessag
     super()
 
     this.on.plus = async (a: number, b: number) => {
-      await this.notify('Thanks for your order. You are now on the queue #1')
-      await Promise.resolve((r) => {
-        setTimeout(r, 2000)
-      })
+      for (let i = 5; i > 0; i--) {
+        void this.notify(`Thanks for your order. Please wait for ${i} seconds ...`)
+        await new Promise<void>((r) => {
+          setTimeout(r, 1000)
+        })
+      }
       return a + b
     }
 
@@ -70,9 +76,11 @@ class DemoServer extends connectWire(reverseProtocol(demoProtocol), WindowMessag
   }
 }
 
-const channel = new MessageChannel()
-const server = new DemoServer(channel.port1)
-const client = new DemoServer(channel.port2)
-const result = await client.plus(1 + 1)
-console.log(`got rpc result: ${result}`)
+;(async () => {
+  const channel = new MessageChannel()
+  const server = new DemoServer(channel.port1)
+  const client = new DemoClient(channel.port2)
+  const result = await client.plus(2, 3)
+  console.log(`got rpc result: ${result}`)
+})()
 ```
