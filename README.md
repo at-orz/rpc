@@ -13,13 +13,7 @@ yarn add @orz/rpc
 ### Deno
 
 ```typescript
-import {
-  RpcWire,
-  connectWire,
-  reverseProtocol,
-  rpcProtocol,
-  rpcMethod,
-} from 'https://www.unpkg.com/@orz/rpc@2.1.3/deno/mod.ts'
+import { RpcWire, connectWire, reverseProtocol, rpcProtocol, rpcMethod } from 'https://esm.sh/@orz/rpc@2.1.3'
 ```
 
 ## Example

@@ -11,11 +11,10 @@
   },
   "files": [
     "dist",
-    "dist-esm",
-    "deno"
+    "dist-esm"
   ],
   "scripts": {
-    "build": "tsc && tsc --project ./tsconfig.esm.json && denoify -o deno",
+    "build": "tsc && tsc --project ./tsconfig.esm.json",
     "preversion": "yarn build"
   },
   "devDependencies": {
@@ -25,7 +24,6 @@
     "@types/prettier": "^2",
     "@typescript-eslint/eslint-plugin": "^5.30.3",
     "@typescript-eslint/parser": "^5.30.3",
-    "denoify": "^0.11.1",
     "eslint": "^8.19.0",
     "prettier": "^2.7.1",
     "typescript": "^4.7.4"
