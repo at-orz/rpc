@@ -15,7 +15,7 @@
     "deno_dist"
   ],
   "scripts": {
-    "build": "tsc && tsc --project ./tsconfig.esm.json && denoify",
+    "build": "tsc && tsc --project ./tsconfig.esm.json && denoify -o deno",
     "preversion": "yarn build"
   },
   "devDependencies": {
