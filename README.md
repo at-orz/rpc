@@ -2,6 +2,26 @@
 
 Yet another RPC scaffolding
 
+## Install
+
+### Node.js
+
+```bash
+yarn add @orz/rpc
+```
+
+### Deno
+
+```typescript
+import {
+  RpcWire,
+  connectWire,
+  reverseProtocol,
+  rpcProtocol,
+  rpcMethod,
+} from 'https://www.unpkg.com/@orz/rpc@2.1.3/deno/mod.ts'
+```
+
 ## Example
 
 [Edit this example in StackBlitz](https://stackblitz.com/edit/orz-rpc)
@@ -32,7 +52,7 @@ class WindowMessageRpc extends RpcWire {
     this.target.close()
   }
 
-  protected async rpcSocketSend(data: Uint8Array): Promise<void> {
+  protected async rpcSocketSend(data: any): Promise<void> {
     this.target.postMessage(data)
   }
 }
