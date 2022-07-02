@@ -10,6 +10,10 @@
     "dist-esm",
     "deno_dist"
   ],
+  "scripts": {
+    "build": "tsc && tsc --project ./tsconfig.esm.json && denoify",
+    "preversion": "yarn build"
+  },
   "devDependencies": {
     "@ainou/code-style": "^0.0.18",
     "@types/eslint": "^8",
