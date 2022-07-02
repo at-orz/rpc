@@ -1,7 +1,7 @@
-import { RpcProtocol } from "./RpcProtocol"
+import { RpcProtocol } from './RpcProtocol'
 
 export type ReverseProtocol<T extends RpcProtocol> = Omit<T, 'server' | 'client'> & {
-  client: T['server'],
+  client: T['server']
   server: T['client']
 }
 

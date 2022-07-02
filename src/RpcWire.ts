@@ -1,37 +1,34 @@
-import { loggerStub } from '@orz/logger-stub';
-import { defer as createDefer, NavybirdDefer } from 'navybird';
-import { Bag } from './Bag';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/require-await */
+import createDefer, { DeferredPromise } from './pDefer'
 
 export abstract class RpcWire {
-  public logger = loggerStub
+  public logger = {
+    error: console.error,
+    warn: console.warn,
+  }
 
   public rpcRunInContext<T>(task: () => T) {
     return task()
   }
 
-  private rpcSeq: number = 0
+  private rpcSeq = 0
 
   // TODO: cleanup callbacks
-  private rpcDefers = new Map<number, NavybirdDefer<any>>()
+  private rpcDefers = new Map<number, DeferredPromise<any>>()
 
-  protected async rpcHandleMessage(message: Uint8Array | string) {
+  protected async rpcHandleMessage(message: any) {
     if (typeof message === 'string') {
-      return this.rpcPanic('Non-binary message received');
+      return this.rpcPanic('Non-binary message received')
     }
 
-    let decoded: any
-    try {
-      decoded = Bag.decode(message)
-    } catch (e) {
-      this.logger.error(e, 'Failed to decode message')
-      return this.rpcPanic("Cannot decode the message");
-    }
+    const decoded = message
 
     if (this.rpcIsRequest(decoded)) {
       await this.rpcHandleRequest(decoded)
     } else if (this.rpcIsResponse(decoded)) {
       if (!this.rpcDefers.has(decoded.seq)) {
-        this.logger.warn("Got unwanted response, seq: {Seq}", decoded.seq)
+        this.logger.warn('Got unwanted response, seq: {Seq}', decoded.seq, decoded)
         return
       }
 
@@ -49,50 +46,58 @@ export abstract class RpcWire {
     }
   }
 
-  async rpcRunMethod(_name: string, _args: any[]): Promise<any> {
-    throw new Error('All Methods Not Implemented');
+  public async rpcRunMethod(_name: string, _args: any[]): Promise<any> {
+    throw new Error('All Methods Not Implemented')
   }
 
   private async rpcHandleRequest(decoded: RpcRequest<any, any[]>) {
     try {
-      const result = await this.rpcRunMethod(decoded.fn, decoded.args);
+      const result = await this.rpcRunMethod(decoded.fn, decoded.args)
       const response: RpcSuccessResponse<any> = {
         seq: decoded.seq,
         result,
-        error: null
+        error: null,
       }
-      await this.rpcSocketSend(Bag.encode(response));
+      await this.rpcSocketSend(response)
     } catch (e) {
-      this.logger.error(e, 'Error happened while running RPC method {MethodName} with {@Arguments}', decoded.fn, decoded.args)
+      this.logger.error(
+        e,
+        'Error happened while running RPC method {MethodName} with {@Arguments}',
+        decoded.fn,
+        decoded.args,
+      )
       const response: RpcErrorResponse = {
         seq: decoded.seq,
         error: this.rpcFormatError(e),
       }
-      await this.rpcSocketSend(Bag.encode(response));
+      await this.rpcSocketSend(response)
     }
   }
 
   protected rpcFormatError(_error: any): IRpcError {
+    console.error(_error)
     return {
-      code: "internal",
-      message: "Internal Error"
+      code: 'internal',
+      message: 'Internal Error',
     }
   }
 
   /**
    * @param code https://github.com/Luka967/websocket-close-codes
    */
-  protected rpcPanic(message: string, code: number = 4033): void {
-    this.rpcPanic = () => { };
-    this.logger.error("Connection closed due to {Reason}", message);
-    this.rpcSocketClose(message, code);
+  protected rpcPanic(message: string, code = 4033): void {
+    this.rpcPanic = () => {
+      // pass
+    }
+    this.logger.error('Connection closed due to {Reason}', message)
+    this.rpcSocketClose(message, code)
   }
 
   protected abstract rpcSocketClose(message?: string, code?: number): void
-  protected abstract rpcSocketSend(data: Uint8Array): Promise<void>
+  protected abstract rpcSocketSend(data: any): Promise<void>
 
   public async rpcCall<Name, Arguments extends any[], R = any>(fn: Name, args: Arguments): Promise<R> {
-    const seq = this.rpcSeq++;
+    const seq = this.rpcSeq++
     const defer = createDefer<R>()
     this.rpcDefers.set(seq, defer)
 
@@ -102,7 +107,7 @@ export abstract class RpcWire {
       fn,
     }
 
-    const payload = Bag.encode(request)
+    const payload = request
     await this.rpcSocketSend(payload)
 
     return await defer.promise
@@ -124,26 +129,26 @@ export interface IRpcError {
 
 export class RpcError extends Error implements IRpcError {
   public code: string
-  constructor(data: IRpcError) {
+  public constructor(data: IRpcError) {
     super(data.message)
     this.code = data.code
   }
 }
 
 type RpcRequest<Name, Arguments extends any[]> = {
-  fn: Name,
-  args: Arguments,
-  seq: number,
+  fn: Name
+  args: Arguments
+  seq: number
 }
 
 type RpcSuccessResponse<T> = {
-  seq: number,
-  error: null,
-  result: T,
+  seq: number
+  error: null
+  result: T
 }
 
 type RpcErrorResponse = {
-  seq: number,
-  error: IRpcError,
+  seq: number
+  error: IRpcError
 }
 type RpcResponse<T> = RpcSuccessResponse<T> | RpcErrorResponse
