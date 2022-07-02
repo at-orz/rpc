@@ -5,6 +5,10 @@
   "denoify.index": "src/index.ts",
   "version": "2.0.1",
   "packageManager": "yarn@3.2.1",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
   "files": [
     "dist",
     "dist-esm",
