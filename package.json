@@ -1,5 +1,5 @@
 {
-  "name": "rpc",
+  "name": "@orz/rpc",
   "main": "dist/",
   "module": "dist-esm/",
   "denoify.index": "src/index.ts",
